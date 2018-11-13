@@ -75,46 +75,35 @@ coinsQuad = [685 413;1339 236;1432 578;629 764]; %pour la frame 1 et 50
 %img= double(imread('bouboule.jpg'));;
 mask = zeros(1080,1920,3);
 img = zeros(100,100,3);
-img(25:74,76:100,:) = 255*ones(50,25,3);
+img(25:74,76:100,:) = ones(50,25,3);
 coinsMain = [76 100 100 76;25 25 74 74;1 1 1 1];
 dim = size(img);
 coinsImg = [0 0;dim(2)-1 0;dim(2)-1 dim(1)-1;0 dim(1)-1];
 H = determineH(coinsQuad,coinsImg);
 mask = projection(mask,img,H,coinsQuad);
+mask = double(mask(:,:,:)>=0.99);
 frameFiltre = mask .* frame;
 %frame = projection(frame,img,H,coinsQuad);
-coordFrameCoinsMain = H \ coinsMain;
+coordFrameCoinsMain = H \ coinsMain;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 S = coordFrameCoinsMain(3,:);
 coordFrameCoinsMain = uint32(coordFrameCoinsMain(1:2,:) ./ [S;S]);
-figure,imshow(uint8(mask))
+figure,imshow(double(mask))
 figure,imshow(uint8(frameFiltre))
-
-
-
 
 xmin = min(coordFrameCoinsMain(1,:));
 xmax = max(coordFrameCoinsMain(1,:));
 ymin = min(coordFrameCoinsMain(2,:));
 ymax = max(coordFrameCoinsMain(2,:));
 pieceOfFrame = frameFiltre(ymin:ymax,xmin:xmax,:);
-coinsMain = double(coordFrameCoinsMain');
-
-%pieceOfFrame = projection(pieceOfFrame,img,inv(H),coinsMain);
-pieceOfFrame = double((pieceOfFrame(:,:,3)<130) .* (pieceOfFrame(:,:,3)>60));
+pieceOfFrame = double((pieceOfFrame(:,:,3)<115) .* (pieceOfFrame(:,:,2)<115) .* (pieceOfFrame(:,:,3)>0) .* (pieceOfFrame(:,:,2)>0)); %>0 pour retirer les pixels noirs du frameFiltre
 figure,imshow(double(pieceOfFrame))
-dim = size(pieceOfFrame);
-coinsImg = [0 0;dim(2)-1 0;dim(2)-1 dim(1)-1;0 dim(1)-1];
-triplePieceOfFrame = zeros(dim(1),dim(2),3);
-triplePieceOfFrame(ymin:ymax,xmin:xmax,1) = pieceOfFrame;
-triplePieceOfFrame(ymin:ymax,xmin:xmax,2) = pieceOfFrame;
-triplePieceOfFrame(ymin:ymax,xmin:xmax,3) = pieceOfFrame;
-figure,imshow(double(triplePieceOfFrame))
 
-H = determineH(coinsMain,coinsImg);
-mask2 = projection(mask,triplePieceOfFrame,H,coinsMain);
 
-figure,imshow(double(mask2))
-
+frameFiltre(ymin:ymax,xmin:xmax,1) = pieceOfFrame;
+frameFiltre(ymin:ymax,xmin:xmax,2) = pieceOfFrame;
+frameFiltre(ymin:ymax,xmin:xmax,3) = pieceOfFrame;
+frame = frame .* frameFiltre;
+figure,imshow(uint8(frame))
 
 
 
