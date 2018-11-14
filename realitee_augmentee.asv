@@ -34,6 +34,30 @@
 % set(hf, 'position', [150 150 480 270])
 % movie(hf, mov2, 1, video.FrameRate);
 
+
+%%
+%1 frame
+close all
+clear all
+
+%Récupération de la frame 1
+video = VideoReader('vid_in2.mp4');
+frame = double(read(video,1));
+%figure,imshow(uint8(frame))
+
+    %détection de contours
+    matFrame = double((frame(:,:,1)+frame(:,:,2)+frame(:,:,3))/3); %pour dériver, on doit prendre une matrice
+    sigma = 0.5; %on prend sigmax = sigmay pour avoir un filtre isotrope
+    [X,Y] = meshgrid(-5:5); %[-3*sigma,3*sigma]
+    dxMatFrame = -X.*exp(-(X.^2.+Y.^2)/2*sigma^2)./2*pi*sigma^4;
+    dyMatFrame = -Y.*exp(-(X.^2.+Y.^2)/2*sigma^2)./2*pi*sigma^4;
+    Ix = conv2(matFrame,dxMatFrame,'same'); %same permet de centrer le filtre sur le point considéré
+    Iy = conv2(matFrame,dyMatFrame,'same');
+    I = sqrt(Ix.^2+Iy.^2);
+    %figure, imshow(I,[0 50])
+    %colormap(flipud(gray(256)))
+
+
 %%
 close all
 clear all
@@ -49,11 +73,11 @@ figure,imshow(uint8(frame))
 coinsQuad = [685 413;1339 236;1432 578;629 764]; %pour la frame 1 et 50
 
 %premier masque
-
+bouboule= double(imread('bouboule.jpg'));
 maskFrame = zeros(1080,1920,3);%masque du frame de la vidéo
 maskImg = zeros(100,100,3);%petite image avec que des 1 de taille 100x100
-maskImg(25:66,76:100,:) = ones(42,25,3);
-coinsMain = [76 100 100 76;25 25 66 66;1 1 1 1];
+maskImg(25:74,76:100,:) = ones(50,25,3);
+coinsMain = [76 100 100 76;25 25 74 74;1 1 1 1];
 dim = size(maskImg);
 coinsImg = [0 0;dim(2)-1 0;dim(2)-1 dim(1)-1;0 dim(1)-1];
 H = determineH(coinsQuad,coinsImg);
@@ -62,40 +86,46 @@ maskFrame = double(maskFrame(:,:,:)>=0.99);
 maskFrame = maskFrame .* frame;
 
 %préparation pour le deuxième masque
-coordFrameCoinsMain = appliqueHomographie(inv(H),coinsMain);
-coordFrameCoinsMain = uint32(passeEnCoordEucli(coordFrameCoinsMain));
+coordFrameCoinsMain = H \ coinsMain;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+S = coordFrameCoinsMain(3,:);
+coordFrameCoinsMain = uint32(coordFrameCoinsMain(1:2,:) ./ [S;S]);
 figure,imshow(double(maskFrame))
 figure,imshow(uint8(maskFrame))
 
-%deuxième masque
 xmin = min(coordFrameCoinsMain(1,:));
 xmax = max(coordFrameCoinsMain(1,:));
 ymin = min(coordFrameCoinsMain(2,:));
 ymax = max(coordFrameCoinsMain(2,:));
 maskMain = maskFrame(ymin:ymax,xmin:xmax,:);
-R = maskMain(:,:,1);
-G = maskMain(:,:,2);
-B = maskMain(:,:,3);
-Y = 0.299*R+0.587*G+0.114*B;
-CR = 0.713*(R-Y);
-maskMain = double(((CR > 0) | (maskMain(:,:,3)<95) | (maskMain(:,:,2)<115)) .* (maskMain(:,:,3)>0) .* (maskMain(:,:,2)>0) ); 
-%maskMain = double(((maskMain(:,:,3)<95) | (maskMain(:,:,2)<115)) .* (maskMain(:,:,3)>0) .* (maskMain(:,:,2)>0)); 
-%>0 pour retirer les pixels noirs du frameFiltre
+maskMain = double(((maskMain(:,:,3)<95) | (maskMain(:,:,2)<115)) .* (maskMain(:,:,3)>0) .* (maskMain(:,:,2)>0)); %>0 pour retirer les pixels noirs du frameFiltre
 figure,imshow(double(maskMain))
 
-%masque total
+
 maskFrame(ymin:ymax,xmin:xmax,1) = maskMain;
 maskFrame(ymin:ymax,xmin:xmax,2) = maskMain;
 maskFrame(ymin:ymax,xmin:xmax,3) = maskMain;
 figure,imshow(double(maskFrame))
 
-%projection de l'image à insérer
-bouboule= double(imread('bouboule.jpg'));
-dimBouboule = size(bouboule);
-coinsBouboule = [0 0;dimBouboule(2)-1 0;dimBouboule(2)-1 dimBouboule(1)-1;0 dimBouboule(1)-1];
-H = determineH(coinsQuad,coinsBouboule);
 frameApresProjection = projection(frame,bouboule,H,coinsQuad);
-figure,imshow(uint8(frameApresProjection))
+figure,imshow(uint8(maskFrame))
 frameFinal = (1-maskFrame).*frameApresProjection + maskFrame .*frame;
 figure,imshow(uint8(frameFinal))
 
+
+
+
+% Rframe = frame(:,:,1);
+% Gframe = frame(:,:,2);
+% Bframe = frame(:,:,3);
+% Y = 0.299*Rframe+0.587*Gframe+0.114*Bframe;
+% Mask=(Y>150) .* (Y<180);
+
+% Rquad = quadrangle(:,:,1);
+% Gquad = quadrangle(:,:,2);
+% Bquad = quadrangle(:,:,3);
+% %faire l'homographie
+% Rframe=Rquad.*(1-Mask)+Rframe.*Mask;
+% Gframe=Gquad.*(1-Mask)+Gframe.*Mask;
+% Bframe=Bquad.*(1-Mask)+Bframe.*Mask;
+% img = uint8(cat(3,R2,G2,B2));
+% figure, imshow(img)
