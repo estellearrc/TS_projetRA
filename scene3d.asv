@@ -1,0 +1,8 @@
+function modele = scene3d()
+
+end
+function segment = construitSegment(pointDepart, pointArrivee, longueur)
+    [xd ys sd] = pointDepart;
+end
+function carre = construitCarre(segment, position)
+end
