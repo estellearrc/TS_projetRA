@@ -1,4 +1,4 @@
-function modele = scene3d()
+function modele = scene3d(numFrame)
 
 end
 function segment = construitSegment(pointDepart, pointArrivee, longueur)
@@ -11,4 +11,5 @@ function segment = construitSegment(pointDepart, pointArrivee, longueur)
     end
 end
 function carre = construitCarre(segment, position)
+    
 end
