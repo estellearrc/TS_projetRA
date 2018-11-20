@@ -1,4 +1,4 @@
-function H = determineH(ptsEsp1,ptsEsp2)
+function H = determineH(ptsEsp1,ptsEsp2)%on a besoin de 4 couples de points (xa*s, ya*s, s) --> (xb,yb,1)
     [A,b] = constructAb(ptsEsp1,ptsEsp2);
     H = A \ b;
     H = [H' 1];

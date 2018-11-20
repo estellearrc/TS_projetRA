@@ -1,4 +1,4 @@
-function P = determineP(ptsEsp1,ptsEsp2)
+function P = determineP(ptsEsp1,ptsEsp2) %on a besoin de 6 couples de points (xa,ya) --> (xb,yb,zb,1)
     [A,b] = constructAb(ptsEsp1,ptsEsp2);
     P = (A'*A) \ (A'*b);
     P = [P' 1];
