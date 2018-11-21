@@ -99,3 +99,11 @@ figure,imshow(uint8(frameApresProjection))
 frameFinal = (1-maskFrame).*frameApresProjection + maskFrame .*frame;
 figure,imshow(uint8(frameFinal))
 
+%tracer un segment
+figure,imshow(uint8(frame))
+coins2d = ginput(6)
+coins2d = fix(coins2d);
+coins3d = [0 0 0;1 0 0;1 1 0;0 1 0;0.49 0.3 0.2;0.7 0.3 0.2];
+P = determineP(coins3d,coins2d);
+
+

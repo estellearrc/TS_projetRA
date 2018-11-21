@@ -1,10 +1,13 @@
 function modele = scene3d(numFrame)
-
+    modele = construitSegment([0 0 1], [100 100 1]);
+    
 end
 function segment = construitSegment(pointHaut, pointBas)
-%algorithme de construction de segment de Bresenham
-    [xh, yh] = pointHaut;
-    [xb, yb] = pointBas;
+%algorithme de construction de segment = [X;Y] de Bresenham
+    xh = pointHaut(1);
+    yh = pointHaut(2);
+    xb = pointBas(1);
+    yb = pointBas(2);
     dx = xb - xh;
     dy = yb - yh;
     if(dx >= dy) %pente entre 0 et 1 en valeur absolue
@@ -18,7 +21,8 @@ function segment = construitSegment(pointHaut, pointBas)
     end
     x = xh;
     y = yh;
-    DessinePixel (x, y, couleur);
+    X = x;
+    Y = y;
     while (x < xb) %on parcourt le segment du point haut vers le point bas
         if (dp <= 0) %On choisit le point tel que y_p+1 = y_p
             dp = dp + deltaE; %Nouveau dp
@@ -40,8 +44,10 @@ function segment = construitSegment(pointHaut, pointBas)
             end
             y = y + 1; %Calcul de y_p+1
         end
-        DessinePixel (x, y, couleur);
+        X = [X x];
+        Y = [Y y];
     end
+    segment = [X; Y];
 end
 function carre = construitCarre(segment, position)
     
