@@ -105,5 +105,5 @@ coins2d = ginput(6)
 coins2d = fix(coins2d);
 coins3d = [0 0 0;1 0 0;1 1 0;0 1 0;0.49 0.3 0.2;0.7 0.3 0.2];
 P = determineP(coins3d,coins2d);
-
+modele = scene3d(50,P);
 
