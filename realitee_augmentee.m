@@ -100,10 +100,19 @@ frameFinal = (1-maskFrame).*frameApresProjection + maskFrame .*frame;
 figure,imshow(uint8(frameFinal))
 
 %tracer un segment
-figure,imshow(uint8(frame))
-coins2d = ginput(6)
-coins2d = fix(coins2d);
+%figure,imshow(uint8(frame))
+%coins2d = ginput(6)
+%coins2d = fix(coins2d);
+coins2d = [686 410;1337 235;1430 581;629 766;991 434;1136 397];
 coins3d = [0 0 0;1 0 0;1 1 0;0 1 0;0.49 0.3 0.2;0.7 0.3 0.2];
 P = determineP(coins3d,coins2d);
 modele = scene3d(50,P);
+X = modele(1,:);
+Y = modele(2,:);
+pos = Y +(X-1)*1080;
+rouge = 255*ones(size(pos));
+vert = zeros(size(pos));
+bleu = zeros(size(pos));
+frame([pos pos+1080*1920 pos+2*1080*1920]) = [rouge vert bleu];
+figure,imshow(uint8(frame))
 

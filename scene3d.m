@@ -1,10 +1,10 @@
 function modele = scene3d(numFrame,P)
-    pointHaut3d = [0;0;0;1];
-    pointBas3d = [1;1;0;1];
-    vectH = P * pointHaut3d;
+    pointBas3d = [0;0;0;1];
+    pointHaut3d = [1;1;0;1];
     vectB = P * pointBas3d;
-    pointHaut2d = passeEnCoordEucli(vectH);
-    pointBas2d = passeEnCoordEucli(vectB);
+    vectH = P * pointHaut3d;
+    pointHaut2d = int32(passeEnCoordEucli(vectH));
+    pointBas2d = int32(passeEnCoordEucli(vectB));
     modele = construitSegment(pointHaut2d,pointBas2d);
 end
 function segment = construitSegment(pointHaut2d, pointBas2d)
@@ -13,8 +13,8 @@ function segment = construitSegment(pointHaut2d, pointBas2d)
     yh = pointHaut2d(2);
     xb = pointBas2d(1);
     yb = pointBas2d(2);
-    dx = xb - xh;
-    dy = yb - yh;
+    dx = xh - xb;
+    dy = yh - yb;
     if(dx >= dy) %pente entre 0 et 1 en valeur absolue
         dp = 2 * dy - dx; % Valeur initiale de dp
         deltaE = 2 * dy;
@@ -24,11 +24,11 @@ function segment = construitSegment(pointHaut2d, pointBas2d)
         deltaE = 2 * dx;
         deltaNE = 2 * (dx - dy);
     end
-    x = xh;
-    y = yh;
+    x = xb;
+    y = yb;
     X = x;
     Y = y;
-    while (x < xb) %on parcourt le segment du point haut vers le point bas
+    while (x < xh) %on parcourt le segment du point bas vers le point haut
         if (dp <= 0) %On choisit le point tel que y_p+1 = y_p
             dp = dp + deltaE; %Nouveau dp
             if(xh >= xb && dx >= dy) %pente entre 0 et 1
@@ -54,6 +54,15 @@ function segment = construitSegment(pointHaut2d, pointBas2d)
     end
     segment = [X; Y];
 end
-function carre = construitCarre(segment, position)
-    
+function rect = construitRectangle(point1,point2,point3,point4)
+    rect = [construitSegment(point1,point2) construitSegment(point3,point2) construitSegment(point3,point4) construitSegment(point4,point1)];
+end
+function pave = construitPaveDroit(point1,point2,point3,point4,point5,point6,point7,point8)
+    rectFloor = construitRectangle(point1,point2,point3,point4);
+    rectCeil = construitRectangle(point5,point6,point7,point8);
+    areteVerticale1 = construitSegment(point1, point5);
+    areteVerticale2 = construitSegment(point2, point6);
+    areteVerticale3 = construitSegment(point3, point7);
+    areteVerticale4 = construitSegment(point4, point8);
+    pave = [rectFloor rectCeil areteVerticale1 areteVerticale2 areteVerticale3 areteVerticale4];
 end
