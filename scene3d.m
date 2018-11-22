@@ -1,18 +1,15 @@
 function modele = scene3d(numFrame,P)
-    pointBas3d = [0;0;0;1];
-    pointHaut3d = [1;1;0;1];
-    vectB = P * pointBas3d;
-    vectH = P * pointHaut3d;
-    pointHaut2d = int32(passeEnCoordEucli(vectH));
-    pointBas2d = int32(passeEnCoordEucli(vectB));
-    modele = construitSegment(pointHaut2d,pointBas2d);
+    points3d = [[0;0;0;1] [1;0;0;1] [1;1;0;1] [0;1;0;1] [0;0;1;1] [1;0;1;1] [1;1;1;1] [0;1;1;1]];
+    vect = P * points3d;
+    points2d = int32(passeEnCoordEucli(vect));
+    modele = construitPaveDroit(points2d(:,1),points2d(:,2),points2d(:,3),points2d(:,4),points2d(:,5),points2d(:,6),points2d(:,7),points2d(:,8));
 end
 function segment = construitSegment(pointHaut2d, pointBas2d)
 %algorithme de construction de segment = [X;Y] de Bresenham
-    xh = pointHaut2d(1);
-    yh = pointHaut2d(2);
-    xb = pointBas2d(1);
-    yb = pointBas2d(2);
+    xh = pointHaut2d(1,1);
+    yh = pointHaut2d(2,1);
+    xb = pointBas2d(1,1);
+    yb = pointBas2d(2,1);
     dx = xh - xb;
     dy = yh - yb;
     if(dx >= dy) %pente entre 0 et 1 en valeur absolue
