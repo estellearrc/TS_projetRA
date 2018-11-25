@@ -110,15 +110,9 @@ coins3d = [0 0 0;1 0 0;1 1 0;0 1 0;0.38 0.875 0.2;0.125 0.875 0];
 %coins2d = [686 410;1337 235;1430 581;629 766;730 524; 922 472];
 %coins3d = [0 0 0;1 0 0;1 1 0;0 1 0;0.11 0.4 0.2;0.38 0.4 0.2];
 P = determineP(coins3d,coins2d);
-modele = scene3d(50,5,P);
-X = modele(1,:);
-Y = modele(2,:);
-pos = Y +(X-1)*1080;
-rouge = 255*ones(size(pos));
-vert = zeros(size(pos));
-bleu = zeros(size(pos));
-frameFinal([pos pos+1080*1920 pos+2*1080*1920]) = [rouge vert bleu];
-figure,imshow(uint8(frameFinal))
+modele = scene3d(50,5,P,0.1);
+frame3d = dessineScene3d(frameFinal, modele, [255 0 255]);
+figure,imshow(uint8(frame3d))
 
 
 

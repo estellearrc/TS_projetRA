@@ -1,6 +1,8 @@
-function modele = scene3d(numFrame,epaisseur,P)
-    points3dCoins = [[0;0;0;1] [0;0;1;1] [1;0;0;1] [1;0;1;1] [1;1;0;1] [1;1;1;1] [0;1;0;1] [0;1;1;1]];
-    points3dBarreaux = extremitesBarreaux(points3dCoins,3);
+function modele = scene3d(numFrame,epaisseur,P,amplitudeMaxMvt)
+    amplitudeMvt = amplitudeMaxMvt * (50 - mod(numFrame,51))/50; %mise à l'échelle
+    amplitudeMvtOppose = amplitudeMaxMvt - amplitudeMvt; 
+    points3dCoins = [[0;0;0+amplitudeMvt;1] [0;0;1+amplitudeMvt;1] [1;0;0+amplitudeMvtOppose;1] [1;0;1+amplitudeMvtOppose;1] [1;1;0+amplitudeMvtOppose;1] [1;1;1+amplitudeMvtOppose;1] [0;1;0+amplitudeMvt;1] [0;1;1+amplitudeMvt;1]];
+    points3dBarreaux = extremitesBarreaux(points3dCoins,5);
     vectCoins = appliqueHomographie(P,points3dCoins);
     vectBarreaux = appliqueHomographie(P,points3dBarreaux);
     points2dCoins = int32(passeEnCoordEucli(vectCoins));
@@ -106,37 +108,48 @@ function barreaux = extremitesBarreaux(points8,nbBarreauxParFace)
             pointBas2 = points8(:,3 + 2*i);
             pointHaut2 = points8(:,4 + 2*i);
         end
-        if(mod(i,2) == 0) %on est sur une face verticale parallèle à l'axe des x
-            xBas1 = pointBas1(1);
-            xBas2 = pointBas2(1);
-            xHaut1 = pointHaut1(1);
-            xHaut2 = pointHaut2(1);
-            espacementBarreauBas = abs(xBas1 - xBas2)/(nbBarreauxParFace +1);
-            espacementBarreauHaut = abs(xHaut1 - xHaut2)/(nbBarreauxParFace +1);
-            for k = 1:nbBarreauxParFace %pour chaque barreau, on ajoute les coordonnées de ses extrémités
-                if(xBas1 < xBas2)
-                    X = [X xBas1+k*espacementBarreauBas xHaut1+k*espacementBarreauHaut];
-                else
-                    X = [X xBas1-k*espacementBarreauBas xHaut1-k*espacementBarreauHaut];
-                end
-                Y = [Y pointBas1(2) pointHaut1(2)];
-                Z = [Z pointBas1(3) pointHaut1(3)];
+        %calcul des coordonnées des barreaux indépendamment de la face sur
+        %laquelle on se trouve pour pouvoir appliquer n'importe quel
+        %mouvement à la cage
+        %concernant les x
+        xBas1 = pointBas1(1);
+        xBas2 = pointBas2(1);
+        xHaut1 = pointHaut1(1);
+        xHaut2 = pointHaut2(1);
+        espacementBarreauBasX = abs(xBas1 - xBas2)/(nbBarreauxParFace +1);
+        espacementBarreauHautX = abs(xHaut1 - xHaut2)/(nbBarreauxParFace +1);
+        %concernant les y
+        yBas1 = pointBas1(2);
+        yBas2 = pointBas2(2);
+        yHaut1 = pointHaut1(2);
+        yHaut2 = pointHaut2(2);
+        espacementBarreauBasY = abs(yBas1 - yBas2)/(nbBarreauxParFace +1);
+        espacementBarreauHautY = abs(yHaut1 - yHaut2)/(nbBarreauxParFace +1);
+        %concernant les z
+        zBas1 = pointBas1(3);
+        zBas2 = pointBas2(3);
+        zHaut1 = pointHaut1(3);
+        zHaut2 = pointHaut2(3);
+        espacementBarreauBasZ = abs(zBas1 - zBas2)/(nbBarreauxParFace +1);
+        espacementBarreauHautZ = abs(zHaut1 - zHaut2)/(nbBarreauxParFace +1);
+        for k = 1:nbBarreauxParFace %pour chaque barreau, on ajoute les coordonnées de ses extrémités
+            %concernant les x
+            if(xBas1 < xBas2)
+                X = [X xBas1+k*espacementBarreauBasX xHaut1+k*espacementBarreauHautX];
+            else
+                X = [X xBas1-k*espacementBarreauBasX xHaut1-k*espacementBarreauHautX];
             end
-        else %on est sur une face verticale parallèle à l'axe des y
-            yBas1 = pointBas1(2);
-            yBas2 = pointBas2(2);
-            yHaut1 = pointHaut1(2);
-            yHaut2 = pointHaut2(2);
-            espacementBarreauBas = abs(yBas1 - yBas2)/(nbBarreauxParFace +1);
-            espacementBarreauHaut = abs(yHaut1 - yHaut2)/(nbBarreauxParFace +1);
-            for k = 1:nbBarreauxParFace %pour chaque barreau, on ajoute les coordonnées de ses extrémités
-                if(yBas1 < yBas2)
-                    Y = [Y yBas1+k*espacementBarreauBas yHaut1+k*espacementBarreauHaut];
-                else
-                    Y = [Y yBas1-k*espacementBarreauBas yHaut1-k*espacementBarreauHaut];
-                end
-                X = [X pointBas1(1) pointHaut1(1)];
-                Z = [Z pointBas1(3) pointHaut1(3)];
+            %concernant les y
+            if(yBas1 < yBas2)
+                Y = [Y yBas1+k*espacementBarreauBasY yHaut1+k*espacementBarreauHautY];
+            else
+                Y = [Y yBas1-k*espacementBarreauBasY yHaut1-k*espacementBarreauHautY];
+            end
+            %concernant les z
+            if(zBas1 < zBas2)
+                Z = [Z zBas1+k*espacementBarreauBasZ zHaut1+k*espacementBarreauHautZ];
+            else
+                Z = [Z zBas1-k*espacementBarreauBasZ zHaut1-k*espacementBarreauHautZ];
             end
         end
     end
