@@ -1,17 +1,28 @@
-function modele = scene3d(numFrame,P)
-    points3d = [[0;0;0;1] [1;0;0;1] [1;1;0;1] [0;1;0;1] [0;0;1;1] [1;0;1;1] [1;1;1;1] [0;1;1;1]];
-    vect = P * points3d;
-    points2d = int32(passeEnCoordEucli(vect));
-    modele = construitPaveDroit(points2d(:,1),points2d(:,2),points2d(:,3),points2d(:,4),points2d(:,5),points2d(:,6),points2d(:,7),points2d(:,8));
+function modele = scene3d(numFrame,epaisseur,P)
+    points3dCoins = [[0;0;0;1] [0;0;1;1] [1;0;0;1] [1;0;1;1] [1;1;0;1] [1;1;1;1] [0;1;0;1] [0;1;1;1]];
+    points3dBarreaux = extremitesBarreaux(points3dCoins,3);
+    vectCoins = appliqueHomographie(P,points3dCoins);
+    vectBarreaux = appliqueHomographie(P,points3dBarreaux);
+    points2dCoins = int32(passeEnCoordEucli(vectCoins));
+    points2dBarreaux = int32(passeEnCoordEucli(vectBarreaux));
+    enveloppeCage = construitPaveDroit(points2dCoins(:,1),points2dCoins(:,2),points2dCoins(:,3),points2dCoins(:,4),points2dCoins(:,5),points2dCoins(:,6),points2dCoins(:,7),points2dCoins(:,8),epaisseur);
+    barreaux = construitBarreaux(points2dBarreaux,epaisseur);
+    modele = [enveloppeCage barreaux];
 end
-function segment = construitSegment(pointHaut2d, pointBas2d)
+function segment = construitSegment(pointHaut2d, pointBas2d,epaisseur)
 %algorithme de construction de segment = [X;Y] de Bresenham
     xh = pointHaut2d(1,1);
     yh = pointHaut2d(2,1);
     xb = pointBas2d(1,1);
     yb = pointBas2d(2,1);
-    dx = xh - xb;
-    dy = yh - yb;
+    if(yh < yb)
+        xh = pointBas2d(1,1);
+        yh = pointBas2d(2,1);
+        xb = pointHaut2d(1,1);
+        yb = pointHaut2d(2,1);
+    end
+    dx = abs(xh - xb);
+    dy = abs(yh - yb);
     if(dx >= dy) %pente entre 0 et 1 en valeur absolue
         dp = 2 * dy - dx; % Valeur initiale de dp
         deltaE = 2 * dy;
@@ -25,7 +36,7 @@ function segment = construitSegment(pointHaut2d, pointBas2d)
     y = yb;
     X = x;
     Y = y;
-    while (x < xh) %on parcourt le segment du point bas vers le point haut
+    while (y < yh) %on parcourt le segment du point bas vers le point haut
         if (dp <= 0) %On choisit le point tel que y_p+1 = y_p
             dp = dp + deltaE; %Nouveau dp
             if(xh >= xb && dx >= dy) %pente entre 0 et 1
@@ -48,18 +59,95 @@ function segment = construitSegment(pointHaut2d, pointBas2d)
         end
         X = [X x];
         Y = [Y y];
+        if(epaisseur > 1)
+            [X,Y] = epaissirTrait(X,Y,x,y,epaisseur);
+        end
     end
     segment = [X; Y];
 end
-function rect = construitRectangle(point1,point2,point3,point4)
-    rect = [construitSegment(point1,point2) construitSegment(point3,point2) construitSegment(point3,point4) construitSegment(point4,point1)];
+function [X,Y] = epaissirTrait(X,Y,x,y,epaisseur)
+    for i = 2:epaisseur
+        if(mod(i,2) == 0)
+            X = [X x+1];
+            Y = [Y y];
+            x = x + 1;
+        else
+            X = [X x];
+            Y = [Y y+1];
+            y = y + 1;
+        end
+    end
 end
-function pave = construitPaveDroit(point1,point2,point3,point4,point5,point6,point7,point8)
-    rectFloor = construitRectangle(point1,point2,point3,point4);
-    rectCeil = construitRectangle(point5,point6,point7,point8);
-    areteVerticale1 = construitSegment(point1, point5);
-    areteVerticale2 = construitSegment(point2, point6);
-    areteVerticale3 = construitSegment(point3, point7);
-    areteVerticale4 = construitSegment(point4, point8);
+function rect = construitRectangle(point1,point2,point3,point4,epaisseur)
+    rect = [construitSegment(point1,point2,epaisseur) construitSegment(point2,point3,epaisseur) construitSegment(point3,point4,epaisseur) construitSegment(point4,point1,epaisseur)];
+end
+function pave = construitPaveDroit(point1,point2,point3,point4,point5,point6,point7,point8,epaisseur)
+    rectFloor = construitRectangle(point1,point3,point5,point7,epaisseur);
+    rectCeil = construitRectangle(point2,point4,point6,point8,epaisseur);
+    areteVerticale1 = construitSegment(point1, point2,epaisseur);
+    areteVerticale2 = construitSegment(point3, point4,epaisseur);
+    areteVerticale3 = construitSegment(point5, point6,epaisseur);
+    areteVerticale4 = construitSegment(point7, point8,epaisseur);
     pave = [rectFloor rectCeil areteVerticale1 areteVerticale2 areteVerticale3 areteVerticale4];
+end
+function barreaux = extremitesBarreaux(points8,nbBarreauxParFace)
+%points8 = [X; Y; Z; 1] où size(X) = [1 8]
+    X = [];
+    Y = [];
+    Z = [];
+    for i = 0:3 %on parcourt les 8 points pour les 4 faces verticales
+        %on récupère les 4 points d'une même face
+        pointBas1 = points8(:,1 + 2*i);
+        pointHaut1 = points8(:,2 + 2*i);
+        if(i == 3)
+            pointBas2 = points8(:,1);
+            pointHaut2 = points8(:,2);
+        else
+            pointBas2 = points8(:,3 + 2*i);
+            pointHaut2 = points8(:,4 + 2*i);
+        end
+        if(mod(i,2) == 0) %on est sur une face verticale parallèle à l'axe des x
+            xBas1 = pointBas1(1);
+            xBas2 = pointBas2(1);
+            xHaut1 = pointHaut1(1);
+            xHaut2 = pointHaut2(1);
+            espacementBarreauBas = abs(xBas1 - xBas2)/(nbBarreauxParFace +1);
+            espacementBarreauHaut = abs(xHaut1 - xHaut2)/(nbBarreauxParFace +1);
+            for k = 1:nbBarreauxParFace %pour chaque barreau, on ajoute les coordonnées de ses extrémités
+                if(xBas1 < xBas2)
+                    X = [X xBas1+k*espacementBarreauBas xHaut1+k*espacementBarreauHaut];
+                else
+                    X = [X xBas1-k*espacementBarreauBas xHaut1-k*espacementBarreauHaut];
+                end
+                Y = [Y pointBas1(2) pointHaut1(2)];
+                Z = [Z pointBas1(3) pointHaut1(3)];
+            end
+        else %on est sur une face verticale parallèle à l'axe des y
+            yBas1 = pointBas1(2);
+            yBas2 = pointBas2(2);
+            yHaut1 = pointHaut1(2);
+            yHaut2 = pointHaut2(2);
+            espacementBarreauBas = abs(yBas1 - yBas2)/(nbBarreauxParFace +1);
+            espacementBarreauHaut = abs(yHaut1 - yHaut2)/(nbBarreauxParFace +1);
+            for k = 1:nbBarreauxParFace %pour chaque barreau, on ajoute les coordonnées de ses extrémités
+                if(yBas1 < yBas2)
+                    Y = [Y yBas1+k*espacementBarreauBas yHaut1+k*espacementBarreauHaut];
+                else
+                    Y = [Y yBas1-k*espacementBarreauBas yHaut1-k*espacementBarreauHaut];
+                end
+                X = [X pointBas1(1) pointHaut1(1)];
+                Z = [Z pointBas1(3) pointHaut1(3)];
+            end
+        end
+    end
+    barreaux = [X; Y; Z; ones(size(X))];
+end
+function barreaux = construitBarreaux(points2dBarreaux,epaisseur)
+    dim = size(points2dBarreaux);
+    barreaux = [];
+    i = 1;
+    while(i < dim(2))
+        barreaux = [barreaux construitSegment(points2dBarreaux(:,i),points2dBarreaux(:,i+1),epaisseur)];
+        i = i + 2;
+    end
 end

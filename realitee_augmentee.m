@@ -41,7 +41,7 @@ clear all
 %Récupération de la frame 1
 video = VideoReader('vid_in2.mp4');
 frame = double(read(video,50));
-figure,imshow(uint8(frame))
+%figure,imshow(uint8(frame))
 
 %homographie
 %coinsQuad = ginput(4)
@@ -64,8 +64,8 @@ maskFrame = maskFrame .* frame;
 %préparation pour le deuxième masque
 coordFrameCoinsMain = appliqueHomographie(inv(H),coinsMain);
 coordFrameCoinsMain = uint32(passeEnCoordEucli(coordFrameCoinsMain));
-figure,imshow(double(maskFrame))
-figure,imshow(uint8(maskFrame))
+%figure,imshow(double(maskFrame))
+%figure,imshow(uint8(maskFrame))
 
 %deuxième masque
 xmin = min(coordFrameCoinsMain(1,:));
@@ -81,13 +81,13 @@ CR = 0.713*(R-Y);
 maskMain = double(((CR > 0) | (maskMain(:,:,3)<95) | (maskMain(:,:,2)<115)) .* (maskMain(:,:,3)>0) .* (maskMain(:,:,2)>0) ); 
 %maskMain = double(((maskMain(:,:,3)<95) | (maskMain(:,:,2)<115)) .* (maskMain(:,:,3)>0) .* (maskMain(:,:,2)>0)); 
 %>0 pour retirer les pixels noirs du frameFiltre
-figure,imshow(double(maskMain))
+%figure,imshow(double(maskMain))
 
 %masque total
 maskFrame(ymin:ymax,xmin:xmax,1) = maskMain;
 maskFrame(ymin:ymax,xmin:xmax,2) = maskMain;
 maskFrame(ymin:ymax,xmin:xmax,3) = maskMain;
-figure,imshow(double(maskFrame))
+%figure,imshow(double(maskFrame))
 
 %projection de l'image à insérer
 bouboule= double(imread('bouboule.jpg'));
@@ -95,24 +95,30 @@ dimBouboule = size(bouboule);
 coinsBouboule = [0 0;dimBouboule(2)-1 0;dimBouboule(2)-1 dimBouboule(1)-1;0 dimBouboule(1)-1];
 H = determineH(coinsQuad,coinsBouboule);
 frameApresProjection = projection(frame,bouboule,H,coinsQuad);
-figure,imshow(uint8(frameApresProjection))
+%figure,imshow(uint8(frameApresProjection))
 frameFinal = (1-maskFrame).*frameApresProjection + maskFrame .*frame;
-figure,imshow(uint8(frameFinal))
+%figure,imshow(uint8(frameFinal))
 
 %tracer un segment
 %figure,imshow(uint8(frame))
 %coins2d = ginput(6)
 %coins2d = fix(coins2d);
-coins2d = [686 410;1337 235;1430 581;629 766;991 434;1136 397];
-coins3d = [0 0 0;1 0 0;1 1 0;0 1 0;0.49 0.3 0.2;0.7 0.3 0.2];
+%cage
+coins2d = [686 410;1337 235;1430 581;629 766;919 473;725 695];
+coins3d = [0 0 0;1 0 0;1 1 0;0 1 0;0.38 0.875 0.2;0.125 0.875 0];
+%cadre
+%coins2d = [686 410;1337 235;1430 581;629 766;730 524; 922 472];
+%coins3d = [0 0 0;1 0 0;1 1 0;0 1 0;0.11 0.4 0.2;0.38 0.4 0.2];
 P = determineP(coins3d,coins2d);
-modele = scene3d(50,P);
+modele = scene3d(50,5,P);
 X = modele(1,:);
 Y = modele(2,:);
 pos = Y +(X-1)*1080;
 rouge = 255*ones(size(pos));
 vert = zeros(size(pos));
 bleu = zeros(size(pos));
-frame([pos pos+1080*1920 pos+2*1080*1920]) = [rouge vert bleu];
-figure,imshow(uint8(frame))
+frameFinal([pos pos+1080*1920 pos+2*1080*1920]) = [rouge vert bleu];
+figure,imshow(uint8(frameFinal))
+
+
 
