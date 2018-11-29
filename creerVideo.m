@@ -1,34 +1,18 @@
-%function video = creerVideo(folderOfFrames)
-    %v = VideoReader('vid_in2.mp4');
-    %nFrames = v.NumberOfFrames;
-
-%     Folder = 'bipbip_frames_gif';
-%     for iFrame = 1:nFrames
-%       frames = read(v, iFrame);
-%       imwrite(frames, fullfile(Folder, sprintf('%06d.jpeg', iFrame)));
-%     end 
-% 
-%     FileList = dir(fullfile(Folder, '*.gif'));
-% 
-%     for iFile = 1:length(FileList)
-%       aFile = fullfile(Folder, FileList(iFile).name);
-%       img   = imread(aFile);
-%     end
-
-    ImFolder='bipbip_frames_gif';
-    gifFile = dir(strcat(ImFolder,'\*.gif'));
-    S = [gifFile(:).datenum];
-    [~,S] = sort(S);
-    gifFiles = gifFile(S);
-    VideoFile=strcat(ImFolder,'\Video');
+%function out = creerVideo(folderOfFrames,videoName,rate)
+    folderOfFrames = 'bipbip_frames2_png';
+    videoName = 'video_bipbip';
+    rate = 3;
+    ImFolder = folderOfFrames; %'bipbip_frames_png';
+    pngFiles = dir(strcat(ImFolder,'\*.png'));
+    VideoFile=strcat(ImFolder,'\',videoName); %video_bipbip
     writeObj = VideoWriter(VideoFile);
-    fps= 10;
+    fps= rate;
     writeObj.FrameRate = fps;
     open(writeObj);
-    for t= 1:length(gifFiles)
-        Frame=imread(strcat(ImFolder,'\',gifFiles(t).name));
+    for t= 1:length(pngFiles)
+        Frame=imread(strcat(ImFolder,'\',pngFiles(t).name));
         writeVideo(writeObj,Frame);
     end
     close(writeObj);
-    %implay('Video.avi')
+    out = true;
 %end
