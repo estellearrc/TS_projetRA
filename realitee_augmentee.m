@@ -5,7 +5,7 @@ clear all
 %agrandir zone masque zone feuille (fail)
 %revoir couleurs du masque bras YCbCr
 %ranger code
-
+load('a.mat', 'C');
 
 %Récupération de la frame 1
 video = VideoReader('vid_in2.mp4');
@@ -14,8 +14,6 @@ bipbip = VideoReader('bipbip_frames2_png\video_bipbip.avi');
 nbFramesBipbip = bipbip.NumberOfFrames;
 coyote = VideoReader('coyote_frames_png\video_coyote.avi');
 nbFramesCoyote = coyote.NumberOfFrames;
-
-Folder = 'video_frames_jpg';
 
 v = VideoWriter('peaks.avi');
 open(v);
@@ -30,7 +28,20 @@ for i = 1:nbFramesVideo
     %homographie
     %coinsQuad = ginput(4)
     %coinsQuad = fix(coinsQuad);
-    coinsQuad = [685 413;1339 236;1432 578;629 764]; %pour la frame 1 et 50
+    rangx = 2*i-1;
+    rangy = 2*i;
+
+    X1base = C(rangx,1);
+    Y1base = C(rangy,1);
+    X2base = C(rangx,2);
+    Y2base = C(rangy,2);
+    X3base = C(rangx,3);
+    Y3base = C(rangy,3);
+    X4base = C(rangx,4);
+    Y4base = C(rangy,4);
+    
+    %coinsQuad = [685 413;1339 236;1432 578;629 764]; %pour la frame 1 et 50
+    coinsQuad = [X1base Y1base;X2base Y2base;X4base Y4base;X3base Y3base];
     coinsFrame = [1 1;1920 1;1920 1080;1 1080];
     coinsCactus = [1516 640;1741 640;1741 1024;1516 1024];
     
@@ -157,7 +168,7 @@ for i = 1:nbFramesVideo
     P = determineP(coins3d,coins2d);
     modele = scene3d(numFrame,5,P,0.1);
     frame3d = dessineScene3d(frameFinal, modele, [255 0 255]);
-%     figure,imshow(uint8(frame3d))
+    %figure,imshow(uint8(frame3d))
     
 %     imwrite(frame3d, fullfile(Folder, sprintf('%06d.jpeg', i)));
     writeVideo(v, uint8(frame3d));
