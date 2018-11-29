@@ -1,5 +1,5 @@
 function modele = scene3d(numFrame,epaisseur,P,amplitudeMaxMvt)
-    amplitudeMvt = amplitudeMaxMvt * (50 - mod(numFrame,51))/50; %mise à l'échelle
+    amplitudeMvt = amplitudeMaxMvt * (30 - mod(numFrame,31))/30; %mise à l'échelle
     amplitudeMvtOppose = amplitudeMaxMvt - amplitudeMvt; 
     points3dCoins = [[0;0;0+amplitudeMvt;1] [0;0;1+amplitudeMvt;1] [1;0;0+amplitudeMvtOppose;1] [1;0;1+amplitudeMvtOppose;1] [1;1;0+amplitudeMvtOppose;1] [1;1;1+amplitudeMvtOppose;1] [0;1;0+amplitudeMvt;1] [0;1;1+amplitudeMvt;1]];
     points3dBarreaux = extremitesBarreaux(points3dCoins,5);
