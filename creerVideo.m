@@ -2,18 +2,18 @@
     %v = VideoReader('vid_in2.mp4');
     %nFrames = v.NumberOfFrames;
 
-    Folder = 'bipbip_frames_gif';
+%     Folder = 'bipbip_frames_gif';
 %     for iFrame = 1:nFrames
 %       frames = read(v, iFrame);
 %       imwrite(frames, fullfile(Folder, sprintf('%06d.jpeg', iFrame)));
 %     end 
-
-    FileList = dir(fullfile(Folder, '*.gif'));
-
-    for iFile = 1:length(FileList)
-      aFile = fullfile(Folder, FileList(iFile).name);
-      img   = imread(aFile);
-    end
+% 
+%     FileList = dir(fullfile(Folder, '*.gif'));
+% 
+%     for iFile = 1:length(FileList)
+%       aFile = fullfile(Folder, FileList(iFile).name);
+%       img   = imread(aFile);
+%     end
 
     ImFolder='bipbip_frames_gif';
     gifFile = dir(strcat(ImFolder,'\*.gif'));
