@@ -50,7 +50,7 @@ for i = 1:nbFramesVideo
     dimBipBip = size(bip);
     coinsBipBip = [0 0;dimBipBip(2)-1 0;dimBipBip(2)-1 dimBipBip(1)-1;0 dimBipBip(1)-1];
     H = determineH(coinsCactus,coinsBipBip);
-    frame = projection(frame,bip,H,coinsFrame,false);
+    frame = projection(frame,bip,H,coinsFrame);
     
     %masque bras ==========================================================
     maskFrame = zeros(1080,1920,3);%masque du frame de la vidéo
@@ -76,7 +76,7 @@ for i = 1:nbFramesVideo
     dim = size(maskImg);
     coinsImg = [0 0;dim(2)-1 0;dim(2)-1 dim(1)-1;0 dim(1)-1];
     H = determineH(coinsQuad,coinsImg);
-    maskFrame = projection(maskFrame,maskImg,H,coinsQuad,false);%Homographie avec grand carré blanc de la main
+    maskFrame = projection(maskFrame,maskImg,H,coinsQuad);%Homographie avec grand carré blanc de la main
     maskFrame = double(maskFrame(:,:,:)>=0.99);
     maskFrame = maskFrame .* frame;
 
@@ -116,7 +116,7 @@ for i = 1:nbFramesVideo
     dim = size(maskBipBip);
     coinsBip = [0 0;dim(2)-1 0;dim(2)-1 dim(1)-1;0 dim(1)-1];
     H = determineH(coinsCactus,coinsBip);
-    maskFrame = projection(maskFrame,maskBipBip,H,coinsCactus,false);%Homographie avec grand carré blanc de la main
+    maskFrame = projection(maskFrame,maskBipBip,H,coinsCactus);%Homographie avec grand carré blanc de la main
     maskFrame = double(maskFrame(:,:,:)>=0.99);
     maskFrame = maskFrame .* frame;
 
@@ -148,7 +148,7 @@ for i = 1:nbFramesVideo
     dimDesert = size(desert);
     coinsDesert = [0 0;dimDesert(2)-1 0;dimDesert(2)-1 dimDesert(1)-1;0 dimDesert(1)-1];
     H = determineH(coinsFrame,coinsDesert);
-    frameApresProjection = projection(frame,desert,H,coinsFrame,true);
+    frameApresProjection = projection(frame,desert,H,coinsFrame);
     %figure,imshow(uint8(frameApresProjection))
     frameApresProjection = (1-maskFrame).*frameApresProjection + maskFrame .*frame;
     %figure,imshow(uint8(frameApresProjection))
@@ -157,7 +157,7 @@ for i = 1:nbFramesVideo
     dimCoyote = size(coy);
     coinsCoyote = [0 0;dimCoyote(2)-1 0;dimCoyote(2)-1 dimCoyote(1)-1;0 dimCoyote(1)-1];
     H = determineH(coinsQuad,coinsCoyote);
-    frameApresProjection = projection(frameApresProjection,coy,H,coinsQuad,true);
+    frameApresProjection = projection(frameApresProjection,coy,H,coinsQuad);
     % figure,imshow(uint8(frameApresProjection))
     frameFinal = (1-maskFrame).*frameApresProjection + maskFrame .*frame;
     %figure,imshow(uint8(frameFinal))
