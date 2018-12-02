@@ -1,4 +1,4 @@
-function frame = projection(frame,img,H,coinsQuadrangle,interpolation)
+function frame = projection(frame,img,H,coinsQuadrangle)
     dim1 = size(img);
     dim2 = size(frame);
     h1 = dim1(1);
@@ -19,18 +19,12 @@ function frame = projection(frame,img,H,coinsQuadrangle,interpolation)
     X2 = coordIni(1,:);
     Y2 = coordIni(2,:);
     pos2 = Y2 +(X2-1)*h2;
-%     if(interpolation)
         IR = interpolationBilineaireIntensite(dim1,img,coordFin,0);
         IG = interpolationBilineaireIntensite(dim1,img,coordFin,h1*w1);
         IB = interpolationBilineaireIntensite(dim1,img,coordFin,2*h1*w1);
         I = [IR IG IB];
         frame([pos2 pos2+w2*h2 pos2+2*w2*h2]) = I;
-%     else
-%         X1 = coordFin(1,:);
-%         Y1 = coordFin(2,:);
-%         pos1 = uint32(Y1 +(X1-1)*h1);
-%         frame([pos2 pos2+w2*h2 pos2+2*w2*h2]) = img([pos1 pos1+w1*h1 pos1+2*w1*h1]);
-%     end
+
 end
 function intensiteInterpolee = interpolationBilineaireIntensite(dim,img,coord,decalage)
     X = coord(1,:);
