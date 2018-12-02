@@ -71,8 +71,8 @@ for i = 1:nbFramesVideo
     %masque main ==========================================================
     %premier masque
     maskImg = zeros(100,100,3);%petite image avec que des 1 de taille 100x100
-    maskImg(25:66,76:100,:) = ones(42,25,3);
-    coinsMain = [76 100 100 76;25 25 66 66;1 1 1 1];
+    maskImg(15:66,76:100,:) = ones(52,25,3);
+    coinsMain = [76 100 100 76;15 15 66 66;1 1 1 1];
     dim = size(maskImg);
     coinsImg = [0 0;dim(2)-1 0;dim(2)-1 dim(1)-1;0 dim(1)-1];
     H = determineH(coinsQuad,coinsImg);
@@ -170,10 +170,9 @@ for i = 1:nbFramesVideo
     frame3d = dessineScene3d(frameFinal, modele, [255 0 255]);
     %figure,imshow(uint8(frame3d))
     
-%     imwrite(frame3d, fullfile(Folder, sprintf('%06d.jpeg', i)));
     writeVideo(v, uint8(frame3d));
 end
 
 close(v);
 
-implay('peaks.avi');
+%implay('peaks.avi');

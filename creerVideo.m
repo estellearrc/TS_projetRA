@@ -1,7 +1,7 @@
 %function out = creerVideo(folderOfFrames,videoName,rate)
     folderOfFrames = 'bipbip_frames2_png';
     videoName = 'video_bipbip';
-    rate = 1;
+    rate = 0.5;
     ImFolder = folderOfFrames; %'bipbip_frames_png';
     pngFiles = dir(strcat(ImFolder,'\*.png'));
     VideoFile=strcat(ImFolder,'\',videoName); %video_bipbip
