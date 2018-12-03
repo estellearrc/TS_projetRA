@@ -10,18 +10,19 @@ bipbip = VideoReader('bipbip_frames2_png/video_bipbip.avi');
 nbFramesBipbip = bipbip.NumberOfFrames;
 coyote = VideoReader('coyote_frames_png/video_coyote.avi');
 nbFramesCoyote = coyote.NumberOfFrames;
+desert= double(imread('desert5.jpg'));
 
 %v = VideoWriter('video_finale.avi');
 %open(v);
 
-for i = 1:nbFramesVideo
-    numFrame = 45;
+%for i = 1:nbFramesVideo
+    numFrame = 50;
     frame = double(read(video,numFrame));
     coy = double(read(coyote,mod(numFrame,nbFramesCoyote)+1));
     bip = double(read(bipbip,mod(numFrame,nbFramesBipbip)+1));
 
-    rangx = 2*i-1;
-    rangy = 2*i;
+    rangx = 2*numFrame-1;
+    rangy = 2*numFrame;
 
     X1base = C(rangx,1);
     Y1base = C(rangy,1);
@@ -33,51 +34,54 @@ for i = 1:nbFramesVideo
     Y4base = C(rangy,4);
     
     coinsQuad = [X1base Y1base;X2base Y2base;X4base Y4base;X3base Y3base];
-    coinsFrame = [1 1;1920 1;1920 1080;1 1080];
+    coinsFrame = genereCoins(frame);
     coinsCactus = [1516 640;1741 640;1741 1024;1516 1024];
+    coinsMain = [76 100 100 76;15 15 66 66;1 1 1 1];
     
         
     %projection de bipbip =================================================
-    dimBipBip = size(bip);
-    coinsBipBip = [0 0;dimBipBip(2)-1 0;dimBipBip(2)-1 dimBipBip(1)-1;0 dimBipBip(1)-1];
-    H = determineH(coinsCactus,coinsBipBip);
-    frame = projection(frame,bip,H,coinsFrame);
+    coinsBip = genereCoins(bip);
+    [frame,H] = routineProjection(bip,coinsBip,frame,coinsFrame,coinsCactus);
     
     %masque bras ==========================================================
     maskFrame = zeros(1080,1920,3);%masque du frame de la vidéo
-    maskFrame(1:540,960:1920,:) = ones(540,961,3);
-    maskFrame = maskFrame .* frame;
-    [R,G,B,Y,CR] = composantesColorimetriques(maskFrame);
-    maskBras = (CR > 6) .* (R < 115);
-    maskFrame = maskRGB([],maskBras,maskFrame);
+    xmin = 960;
+    xmax = 1920;
+    ymin = 1;
+    ymax = 540;
+    maskFrame(ymin:ymax,xmin:xmax,:) = ones(ymax-ymin+1,xmax-xmin+1,3);
+    filtreBras = @(R,G,B,Y,CR) (CR > 6).*(R < 115);
+    maskFrame = masqueSansProjection(frame,maskFrame,filtreBras,[]);
     
     %masque main ==========================================================
     %premier masque
     maskImg = zeros(100,100,3);%petite image avec que des 1 de taille 100x100
     maskImg(15:66,76:100,:) = ones(52,25,3);
-    coinsMain = [76 100 100 76;15 15 66 66;1 1 1 1];
-    dim = size(maskImg);
-    coinsImg = [0 0;dim(2)-1 0;dim(2)-1 dim(1)-1;0 dim(1)-1];
-    H = determineH(coinsQuad,coinsImg);
-    maskFrame = projection(maskFrame,maskImg,H,coinsQuad);%Homographie avec grand carré blanc de la main
-    maskFrame = double(maskFrame(:,:,:)>=0.99);
-    maskFrame = maskFrame .* frame;
-
-    %récupération des coordonnées des coins de la zone blanche où se trouve la main
-    coordFrameCoinsMain = appliqueHomographie(inv(H),coinsMain);
-    coordFrameCoinsMain = uint32(passeEnCoordEucli(coordFrameCoinsMain));
-
-    %deuxième masque
-    %plus petit rectangle englobant de la zone blanche où se trouve la main
-    [xmin, xmax, ymin, ymax] = calculeMinMax(coordFrameCoinsMain');
-    maskMain = maskFrame(ymin:ymax,xmin:xmax,:);
-    [R,G,B,Y,CR] = composantesColorimetriques(maskMain);
-    maskMain = double(((CR > 0)| (B<95) | (G<115)) .* (B>0) .* (G>0) ); 
-    %>0 pour retirer les pixels noirs du maskMain
-
-    %masque total
-    maskFrame = maskRGB([xmin xmax ymin ymax],maskMain,maskFrame);
-    maskFrame = double(maskFrame(:,:,:)>0);
+    filtreMain = @(R,G,B,Y,CR) ((CR > 0) | (B<95) | (G<115)) .* (B>0) .* (G>0);
+    maskFrame = masqueAvecProjection(frame,maskImg,maskFrame,coinsMain,coinsQuad,filtreMain);
+    
+%     dim = size(maskImg);
+%     coinsImg = [0 0;dim(2)-1 0;dim(2)-1 dim(1)-1;0 dim(1)-1];
+%     H = determineH(coinsQuad,coinsImg);
+%     maskFrame = projection(maskFrame,maskImg,H,coinsQuad);%Homographie avec grand carré blanc de la main
+%     maskFrame = double(maskFrame(:,:,:)>=0.99);
+%     maskFrame = maskFrame .* frame;
+% 
+%     %récupération des coordonnées des coins de la zone blanche où se trouve la main
+%     coordFrameCoinsMain = appliqueHomographie(inv(H),coinsMain);
+%     coordFrameCoinsMain = uint32(passeEnCoordEucli(coordFrameCoinsMain));
+% 
+%     %deuxième masque
+%     %plus petit rectangle englobant de la zone blanche où se trouve la main
+%     [xmin, xmax, ymin, ymax] = calculeMinMax(coordFrameCoinsMain');
+%     maskMain = maskFrame(ymin:ymax,xmin:xmax,:);
+%     [R,G,B,Y,CR] = composantesColorimetriques(maskMain);
+%     maskMain = double(((CR > 0)| (B<95) | (G<115)) .* (B>0) .* (G>0) ); 
+%     %>0 pour retirer les pixels noirs du maskMain
+% 
+%     %masque total
+%     maskFrame = maskRGB([xmin xmax ymin ymax],maskMain,maskFrame);
+%     maskFrame = double(maskFrame(:,:,:)>0);
     
     %masque bipbip ========================================================
     [xmin,xmax,ymin,ymax] = calculeMinMax(coinsCactus);
@@ -101,7 +105,6 @@ for i = 1:nbFramesVideo
     maskFrame = double(maskFrame(:,:,:)>0);
     
     %projection du décor ==================================================
-    desert= double(imread('desert5.jpg'));
     dimDesert = size(desert);
     coinsDesert = [0 0;dimDesert(2)-1 0;dimDesert(2)-1 dimDesert(1)-1;0 dimDesert(1)-1];
     H = determineH(coinsFrame,coinsDesert);
@@ -124,6 +127,6 @@ for i = 1:nbFramesVideo
     figure,imshow(uint8(frame3d))
     
     %writeVideo(v, uint8(frame3d));
-end
+%end
 
 %close(v);
