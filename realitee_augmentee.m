@@ -1,13 +1,9 @@
 close all
 clear all
 
-%interpolation bilinéaire à enlever quand masque scalaire (fail)
-%agrandir zone masque zone feuille (fail)
-%revoir couleurs du masque bras YCbCr
-%ranger code
 load('a.mat', 'C');
 
-%Récupération de la frame 1
+%Récupération des différentes vidéos utiles
 video = VideoReader('vid_in2.mp4');
 nbFramesVideo = video.NumberOfFrames;
 bipbip = VideoReader('bipbip_frames2_png/video_bipbip.avi');
@@ -15,7 +11,7 @@ nbFramesBipbip = bipbip.NumberOfFrames;
 coyote = VideoReader('coyote_frames_png/video_coyote.avi');
 nbFramesCoyote = coyote.NumberOfFrames;
 
-v = VideoWriter('peaks.avi');
+v = VideoWriter('video_finale.avi');
 open(v);
 
 for i = 1:nbFramesVideo
@@ -23,11 +19,7 @@ for i = 1:nbFramesVideo
     frame = double(read(video,numFrame));
     coy = double(read(coyote,mod(numFrame,nbFramesCoyote)+1));
     bip = double(read(bipbip,mod(numFrame,nbFramesBipbip)+1));
-    %figure,imshow(uint8(frame))
 
-    %homographie
-    %coinsQuad = ginput(4)
-    %coinsQuad = fix(coinsQuad);
     rangx = 2*i-1;
     rangy = 2*i;
 
@@ -40,7 +32,6 @@ for i = 1:nbFramesVideo
     X4base = C(rangx,4);
     Y4base = C(rangy,4);
     
-    %coinsQuad = [685 413;1339 236;1432 578;629 764]; %pour la frame 1 et 50
     coinsQuad = [X1base Y1base;X2base Y2base;X4base Y4base;X3base Y3base];
     coinsFrame = [1 1;1920 1;1920 1080;1 1080];
     coinsCactus = [1516 640;1741 640;1741 1024;1516 1024];
@@ -56,17 +47,9 @@ for i = 1:nbFramesVideo
     maskFrame = zeros(1080,1920,3);%masque du frame de la vidéo
     maskFrame(1:540,960:1920,:) = ones(540,961,3);
     maskFrame = maskFrame .* frame;
-    R = maskFrame(:,:,1);
-    G = maskFrame(:,:,2);
-    B = maskFrame(:,:,3);
-    Y = 0.299*R+0.587*G+0.114*B;
-    CR = 0.713*(R-Y);
+    [R,G,B,Y,CR] = composantesColorimetriques(maskFrame);
     maskBras = (CR > 6) .* (R < 115);
-    %figure,imshow(double(maskBras))
-    maskFrame(:,:,1) = maskBras; 
-    maskFrame(:,:,2) = maskBras;
-    maskFrame(:,:,3) = maskBras;
-    %figure,imshow(double(maskFrame))
+    maskFrame = maskRGB([],maskBras,maskFrame);
     
     %masque main ==========================================================
     %premier masque
@@ -80,34 +63,21 @@ for i = 1:nbFramesVideo
     maskFrame = double(maskFrame(:,:,:)>=0.99);
     maskFrame = maskFrame .* frame;
 
-    %préparation pour le deuxième masque
+    %récupération des coordonnées des coins de la zone blanche où se trouve la main
     coordFrameCoinsMain = appliqueHomographie(inv(H),coinsMain);
     coordFrameCoinsMain = uint32(passeEnCoordEucli(coordFrameCoinsMain));
-    %figure,imshow(double(maskFrame))
-    %figure,imshow(uint8(maskFrame))
 
     %deuxième masque
-    xmin = min(coordFrameCoinsMain(1,:));
-    xmax = max(coordFrameCoinsMain(1,:));
-    ymin = min(coordFrameCoinsMain(2,:));
-    ymax = max(coordFrameCoinsMain(2,:));
+    %plus petit rectangle englobant de la zone blanche où se trouve la main
+    [xmin, xmax, ymin, ymax] = calculeMinMax(coordFrameCoinsMain');
     maskMain = maskFrame(ymin:ymax,xmin:xmax,:);
-    R = maskMain(:,:,1);
-    G = maskMain(:,:,2);
-    B = maskMain(:,:,3);
-    Y = 0.299*R+0.587*G+0.114*B;
-    CR = 0.713*(R-Y);
-    maskMain = double(((CR > 0)| (maskMain(:,:,3)<95) | (maskMain(:,:,2)<115)) .* (maskMain(:,:,3)>0) .* (maskMain(:,:,2)>0) ); 
-    %maskMain = double(((maskMain(:,:,3)<95) | (maskMain(:,:,2)<115)) .* (maskMain(:,:,3)>0) .* (maskMain(:,:,2)>0)); 
+    [R,G,B,Y,CR] = composantesColorimetriques(maskMain);
+    maskMain = double(((CR > 0)| (B<95) | (G<115)) .* (B>0) .* (G>0) ); 
     %>0 pour retirer les pixels noirs du maskMain
-    %figure,imshow(double(maskMain))
 
     %masque total
-    maskFrame(ymin:ymax,xmin:xmax,1) = maskMain; 
-    maskFrame(ymin:ymax,xmin:xmax,2) = maskMain;
-    maskFrame(ymin:ymax,xmin:xmax,3) = maskMain;
+    maskFrame = maskRGB([xmin xmax ymin ymax],maskMain,maskFrame);
     maskFrame = double(maskFrame(:,:,:)>0);
-    %figure,imshow(maskFrame)
     
     %masque bipbip ========================================================
     [xmin,xmax,ymin,ymax] = calculeMinMax(coinsCactus);
@@ -123,44 +93,27 @@ for i = 1:nbFramesVideo
     %deuxième masque
     [xmin,xmax,ymin,ymax] = calculeMinMax(coinsCactus);
     maskBipBip = maskFrame(ymin:ymax,xmin:xmax,:);
-    R = maskBipBip(:,:,1);
-    G = maskBipBip(:,:,2);
-    B = maskBipBip(:,:,3);
-%     Y = 0.299*R+0.587*G+0.114*B;
-%     CR = 0.713*(R-Y);
-%     maskMain = double(((CR > 0)| (maskMain(:,:,3)<95) | (maskMain(:,:,2)<115)) .* (maskMain(:,:,3)>0) .* (maskMain(:,:,2)>0) ); 
-    maskBipBip = double((R>10).* (G>10) .* (B>10));
-    %maskMain = double(((maskMain(:,:,3)<95) | (maskMain(:,:,2)<115)) .* (maskMain(:,:,3)>0) .* (maskMain(:,:,2)>0)); 
-    %>0 pour retirer les pixels noirs du maskMain
-    %figure,imshow(double(maskMain))
+    [R,G,B,Y,CR] = composantesColorimetriques(maskBipBip);
+    maskBipBip = double((R>10).* (G>10) .* (B>10)); 
 
     %masque total
-    maskFrame(ymin:ymax,xmin:xmax,1) = maskBipBip; 
-    maskFrame(ymin:ymax,xmin:xmax,2) = maskBipBip;
-    maskFrame(ymin:ymax,xmin:xmax,3) = maskBipBip;
+    maskFrame = maskRGB([xmin,xmax,ymin,ymax],maskBipBip,maskFrame);
     maskFrame = double(maskFrame(:,:,:)>0);
-    %figure,imshow(maskFrame)
-    
     
     %projection du décor ==================================================
     desert= double(imread('desert5.jpg'));
-    %bip = double(read(bipbip,mod(numFrame,nbFramesBipbip)));
     dimDesert = size(desert);
     coinsDesert = [0 0;dimDesert(2)-1 0;dimDesert(2)-1 dimDesert(1)-1;0 dimDesert(1)-1];
     H = determineH(coinsFrame,coinsDesert);
     frameApresProjection = projection(frame,desert,H,coinsFrame);
-    %figure,imshow(uint8(frameApresProjection))
     frameApresProjection = (1-maskFrame).*frameApresProjection + maskFrame .*frame;
-    %figure,imshow(uint8(frameApresProjection))
     
     %projection de coyote =================================================
     dimCoyote = size(coy);
     coinsCoyote = [0 0;dimCoyote(2)-1 0;dimCoyote(2)-1 dimCoyote(1)-1;0 dimCoyote(1)-1];
     H = determineH(coinsQuad,coinsCoyote);
     frameApresProjection = projection(frameApresProjection,coy,H,coinsQuad);
-    % figure,imshow(uint8(frameApresProjection))
     frameFinal = (1-maskFrame).*frameApresProjection + maskFrame .*frame;
-    %figure,imshow(uint8(frameFinal))
     
     %insertion 3d =========================================================
     coins2d = [686 410;1337 235;1430 581;629 766;919 473;725 695];
@@ -170,9 +123,7 @@ for i = 1:nbFramesVideo
     frame3d = dessineScene3d(frameFinal, modele, [255 0 255]);
     figure,imshow(uint8(frame3d))
     
-    writeVideo(v, uint8(frame3d));
+    %writeVideo(v, uint8(frame3d));
 end
 
 close(v);
-
-%implay('peaks.avi');

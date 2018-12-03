@@ -6,7 +6,7 @@ function modele = scene3d(numFrame,epaisseur,P,amplitudeMaxMvt)
     else
         points3dCoins = [[0;0;0+amplitudeMvtOppose;1] [0;0;1+amplitudeMvtOppose;1] [1;0;0+amplitudeMvt;1] [1;0;1+amplitudeMvt;1] [1;1;0+amplitudeMvt;1] [1;1;1+amplitudeMvt;1] [0;1;0+amplitudeMvtOppose;1] [0;1;1+amplitudeMvtOppose;1]];
     end
-    points3dBarreaux = extremitesBarreaux(points3dCoins,5);
+    points3dBarreaux = extremitesBarreaux(points3dCoins,2*mod(numFrame,3)+1);
     vectCoins = appliqueHomographie(P,points3dCoins);
     vectBarreaux = appliqueHomographie(P,points3dBarreaux);
     points2dCoins = int32(passeEnCoordEucli(vectCoins));
