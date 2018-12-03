@@ -11,11 +11,11 @@ nbFramesBipbip = bipbip.NumberOfFrames;
 coyote = VideoReader('coyote_frames_png/video_coyote.avi');
 nbFramesCoyote = coyote.NumberOfFrames;
 
-v = VideoWriter('video_finale.avi');
-open(v);
+%v = VideoWriter('video_finale.avi');
+%open(v);
 
 for i = 1:nbFramesVideo
-    numFrame = 50;
+    numFrame = 45;
     frame = double(read(video,numFrame));
     coy = double(read(coyote,mod(numFrame,nbFramesCoyote)+1));
     bip = double(read(bipbip,mod(numFrame,nbFramesBipbip)+1));
@@ -126,4 +126,4 @@ for i = 1:nbFramesVideo
     %writeVideo(v, uint8(frame3d));
 end
 
-close(v);
+%close(v);
