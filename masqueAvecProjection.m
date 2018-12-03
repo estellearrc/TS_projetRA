@@ -1,5 +1,4 @@
 function maskFrame = masqueAvecProjection(frame,maskImg,maskFrame,coinsZoneFiltre,coinsZoneInsertion,fonctionFiltre)
-%fonctions anonymes : carre = @(x) x.^2;
     %premier masque
     coinsImg = genereCoins(maskImg);
     coinsFrame = genereCoins(maskFrame);

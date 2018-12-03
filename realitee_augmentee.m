@@ -11,12 +11,13 @@ nbFramesBipbip = bipbip.NumberOfFrames;
 coyote = VideoReader('coyote_frames_png/video_coyote.avi');
 nbFramesCoyote = coyote.NumberOfFrames;
 desert= double(imread('desert5.jpg'));
+compteur = 1;
 
-%v = VideoWriter('video_finale.avi');
-%open(v);
+v = VideoWriter('video_finale.avi');
+open(v);
 
-%for i = 1:nbFramesVideo
-    numFrame = 50;
+for i = 1:nbFramesVideo
+    numFrame = i;
     frame = double(read(video,numFrame));
     coy = double(read(coyote,mod(numFrame,nbFramesCoyote)+1));
     bip = double(read(bipbip,mod(numFrame,nbFramesBipbip)+1));
@@ -82,11 +83,14 @@ desert= double(imread('desert5.jpg'));
     coins2d = [686 410;1337 235;1430 581;629 766;919 473;725 695];
     coins3d = [0 0 0;1 0 0;1 1 0;0 1 0;0.38 0.875 0.2;0.125 0.875 0];
     P = determineP(coins3d,coins2d);
-    modele = scene3d(numFrame,5,P,0.1);
+    if(mod(numFrame,8)==0)
+        compteur = compteur + 1;
+    end
+    modele = scene3d(numFrame,5,P,0.1,compteur);
     frame3d = dessineScene3d(frameFinal, modele, [255 0 255]);
-    figure,imshow(uint8(frame3d))
+    %figure,imshow(uint8(frame3d))
     
-    %writeVideo(v, uint8(frame3d));
-%end
+    writeVideo(v, uint8(frame3d));
+end
 
-%close(v);
+close(v);
