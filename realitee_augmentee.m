@@ -10,16 +10,16 @@ load('a.mat', 'C');
 %Récupération de la frame 1
 video = VideoReader('vid_in2.mp4');
 nbFramesVideo = video.NumberOfFrames;
-bipbip = VideoReader('bipbip_frames2_png\video_bipbip.avi');
+bipbip = VideoReader('bipbip_frames2_png/video_bipbip.avi');
 nbFramesBipbip = bipbip.NumberOfFrames;
-coyote = VideoReader('coyote_frames_png\video_coyote.avi');
+coyote = VideoReader('coyote_frames_png/video_coyote.avi');
 nbFramesCoyote = coyote.NumberOfFrames;
 
 v = VideoWriter('peaks.avi');
 open(v);
 
 for i = 1:nbFramesVideo
-    numFrame = i;
+    numFrame = 50;
     frame = double(read(video,numFrame));
     coy = double(read(coyote,mod(numFrame,nbFramesCoyote)+1));
     bip = double(read(bipbip,mod(numFrame,nbFramesBipbip)+1));
@@ -168,7 +168,7 @@ for i = 1:nbFramesVideo
     P = determineP(coins3d,coins2d);
     modele = scene3d(numFrame,5,P,0.1);
     frame3d = dessineScene3d(frameFinal, modele, [255 0 255]);
-    %figure,imshow(uint8(frame3d))
+    figure,imshow(uint8(frame3d))
     
     writeVideo(v, uint8(frame3d));
 end
