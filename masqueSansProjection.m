@@ -1,5 +1,5 @@
-function maskFrame = masqueSansProjection(frame,maskFrame,fonctionFiltre,zone)
-    maskFrame = maskFrame .* frame;
+function maskFrame = masqueSansProjection(maskFrame,fonctionFiltre,zone)
+    
     if(numel(zone)==0)
         [R,G,B,Y,CR] = composantesColorimetriques(maskFrame);
     else

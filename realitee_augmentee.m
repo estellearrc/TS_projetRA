@@ -51,7 +51,8 @@ desert= double(imread('desert5.jpg'));
     ymax = 540;
     maskFrame(ymin:ymax,xmin:xmax,:) = ones(ymax-ymin+1,xmax-xmin+1,3);
     filtreBras = @(R,G,B,Y,CR) (CR > 6).*(R < 115);
-    maskFrame = masqueSansProjection(frame,maskFrame,filtreBras,[]);
+    maskFrame = maskFrame .* frame;
+    maskFrame = masqueSansProjection(maskFrame,filtreBras,[]);
     
     %masque main ==========================================================
     %premier masque
@@ -60,62 +61,21 @@ desert= double(imread('desert5.jpg'));
     filtreMain = @(R,G,B,Y,CR) ((CR > 0) | (B<95) | (G<115)) .* (B>0) .* (G>0);
     maskFrame = masqueAvecProjection(frame,maskImg,maskFrame,coinsMain,coinsQuad,filtreMain);
     
-%     dim = size(maskImg);
-%     coinsImg = [0 0;dim(2)-1 0;dim(2)-1 dim(1)-1;0 dim(1)-1];
-%     H = determineH(coinsQuad,coinsImg);
-%     maskFrame = projection(maskFrame,maskImg,H,coinsQuad);%Homographie avec grand carré blanc de la main
-%     maskFrame = double(maskFrame(:,:,:)>=0.99);
-%     maskFrame = maskFrame .* frame;
-% 
-%     %récupération des coordonnées des coins de la zone blanche où se trouve la main
-%     coordFrameCoinsMain = appliqueHomographie(inv(H),coinsMain);
-%     coordFrameCoinsMain = uint32(passeEnCoordEucli(coordFrameCoinsMain));
-% 
-%     %deuxième masque
-%     %plus petit rectangle englobant de la zone blanche où se trouve la main
-%     [xmin, xmax, ymin, ymax] = calculeMinMax(coordFrameCoinsMain');
-%     maskMain = maskFrame(ymin:ymax,xmin:xmax,:);
-%     [R,G,B,Y,CR] = composantesColorimetriques(maskMain);
-%     maskMain = double(((CR > 0)| (B<95) | (G<115)) .* (B>0) .* (G>0) ); 
-%     %>0 pour retirer les pixels noirs du maskMain
-% 
-%     %masque total
-%     maskFrame = maskRGB([xmin xmax ymin ymax],maskMain,maskFrame);
-%     maskFrame = double(maskFrame(:,:,:)>0);
-    
     %masque bipbip ========================================================
     [xmin,xmax,ymin,ymax] = calculeMinMax(coinsCactus);
     maskFrame(ymin+4:ymax,xmin+4:xmax,:) = ones(ymax-ymin+1-4,xmax-xmin+1-4,3);
     maskBipBip = ones(100,100,3);%petite image avec que des 1 de taille 100x100
-    dim = size(maskBipBip);
-    coinsBip = [0 0;dim(2)-1 0;dim(2)-1 dim(1)-1;0 dim(1)-1];
-    H = determineH(coinsCactus,coinsBip);
-    maskFrame = projection(maskFrame,maskBipBip,H,coinsCactus);%Homographie avec grand carré blanc de la main
-    maskFrame = double(maskFrame(:,:,:)>=0.99);
-    maskFrame = maskFrame .* frame;
-
-    %deuxième masque
-    [xmin,xmax,ymin,ymax] = calculeMinMax(coinsCactus);
-    maskBipBip = maskFrame(ymin:ymax,xmin:xmax,:);
-    [R,G,B,Y,CR] = composantesColorimetriques(maskBipBip);
-    maskBipBip = double((R>10).* (G>10) .* (B>10)); 
-
-    %masque total
-    maskFrame = maskRGB([xmin,xmax,ymin,ymax],maskBipBip,maskFrame);
-    maskFrame = double(maskFrame(:,:,:)>0);
-    
+    filtreBipBip = @(R,G,B,Y,CR) (R>10).* (G>10) .* (B>10);
+    maskFrame = masqueAvecProjection(frame,maskBipBip,maskFrame,coinsCactus,coinsCactus,filtreBipBip);
+        
     %projection du décor ==================================================
-    dimDesert = size(desert);
-    coinsDesert = [0 0;dimDesert(2)-1 0;dimDesert(2)-1 dimDesert(1)-1;0 dimDesert(1)-1];
-    H = determineH(coinsFrame,coinsDesert);
-    frameApresProjection = projection(frame,desert,H,coinsFrame);
+    coinsDesert = genereCoins(desert);
+    frameApresProjection = routineProjection(desert,coinsDesert,frame,coinsFrame,coinsFrame);
     frameApresProjection = (1-maskFrame).*frameApresProjection + maskFrame .*frame;
     
     %projection de coyote =================================================
-    dimCoyote = size(coy);
-    coinsCoyote = [0 0;dimCoyote(2)-1 0;dimCoyote(2)-1 dimCoyote(1)-1;0 dimCoyote(1)-1];
-    H = determineH(coinsQuad,coinsCoyote);
-    frameApresProjection = projection(frameApresProjection,coy,H,coinsQuad);
+    coinsCoyote = genereCoins(coy);
+    frameApresProjection = routineProjection(coy,coinsCoyote,frameApresProjection,coinsFrame,coinsQuad);
     frameFinal = (1-maskFrame).*frameApresProjection + maskFrame .*frame;
     
     %insertion 3d =========================================================
