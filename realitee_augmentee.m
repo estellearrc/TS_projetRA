@@ -6,9 +6,9 @@ load('a.mat', 'C');
 %Récupération des différentes vidéos utiles
 video = VideoReader('vid_in2.mp4');
 nbFramesVideo = video.NumberOfFrames;
-bipbip = VideoReader('bipbip_frames2_png\video_bipbip.avi');
+bipbip = VideoReader('bipbip_frames2_png/video_bipbip.avi');
 nbFramesBipbip = bipbip.NumberOfFrames;
-coyote = VideoReader('coyote_frames_png\video_coyote.avi');
+coyote = VideoReader('coyote_frames_png/video_coyote.avi');
 nbFramesCoyote = coyote.NumberOfFrames;
 desert= double(imread('desert5.jpg'));
 
